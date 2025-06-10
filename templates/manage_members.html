@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <title>Upravljanje Članov</title>
+</head>
+<body>
+    <h2>
+        <i data-lucide="users" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 12px; color: var(--primary-color);"></i>
+        Upravljaj člane
+    </h2>
+
+    <div class="nav-buttons">
+        <a href="{{ url_for('calendar_view') }}">
+            <i data-lucide="calendar" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+            Nazaj na Koledar
+        </a>
+    </div>
+
+    <!-- Add Member Form -->
+    <div class="form-container">
+        <h3 style="margin: 0 0 24px 0; color: var(--text-primary); font-size: 1.25rem; font-weight: 600;">
+            <i data-lucide="user-plus" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; color: var(--secondary-color);"></i>
+            Dodaj Novega Člana
+        </h3>
+        
+        <form method="post" class="styled-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name" class="form-label">
+                        <i data-lucide="user" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Ime
+                    </label>
+                    <input type="text" id="name" name="name" placeholder="Vnesite ime člana" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="team" class="form-label">
+                        <i data-lucide="flag" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Ekipa
+                    </label>
+                    <input type="text" id="team" name="team" placeholder="Vnesite ime ekipe" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i data-lucide="palette" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                    Barva
+                </label>
+                <div class="color-picker-container">
+                    <div id="color-picker"></div>
+                    <input type="text" name="color" id="color-input" placeholder="#6366f1" required class="form-input color-input">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i data-lucide="plus" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Dodaj Člana
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Members Table -->
+    <div class="section-header">
+        <h3>
+            <i data-lucide="list" style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px; color: var(--secondary-color);"></i>
+            Trenutni Člani
+        </h3>
+    </div>
+
+    <div class="table-container">
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>
+                        <i data-lucide="user" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Ime
+                    </th>
+                    <th>
+                        <i data-lucide="flag" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Ekipa
+                    </th>
+                    <th>
+                        <i data-lucide="palette" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Barva
+                    </th>
+                    <th>
+                        <i data-lucide="settings" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Dejanja
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                <tr>
+                    <td class="member-name">{{ member.name }}</td>
+                    <td class="team-badge">
+                        <span class="badge">{{ member.team }}</span>
+                    </td>
+                    <td>
+                        <div class="color-preview" style="background-color: {{ member.color or '#6366f1' }};" title="{{ member.color or '#6366f1' }}"></div>
+                    </td>
+                    <td class="actions" style="display: flex; gap: 8px;">
+    <form action="{{ url_for('edit_member', member_id=member.id) }}" method="get" class="inline-form">
+        <button type="submit" class="btn-secondary btn-small">
+            <i data-lucide="edit-3" style="width: 12px; height: 12px; margin-right: 4px;"></i>
+            Uredi
+        </button>
+    </form>
+    <form method="post" action="{{ url_for('delete_member', member_id=member.id) }}" onsubmit="return confirm('Odstrani člana {{ member.name }}? To ga bo odstranilo iz vseh opravil.')" class="inline-form">
+        <button type="submit" class="btn-danger btn-small">
+            <i data-lucide="trash-2" style="width: 12px; height: 12px; margin-right: 4px;"></i>
+            Odstrani
+        </button>
+    </form>
+</td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if not members %}
+    <div class="empty-state">
+        <i data-lucide="users" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+        <p>Še ni članov ekipe.</p>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Dodajte prvega člana ekipe z zgornjim obrazcem.</p>
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Initialize color picker
+        const pickr = Pickr.create({
+            el: '#color-picker',
+            theme: 'classic',
+            default: '#6366f1',
+            swatches: [
+                '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7',
+                '#d946ef', '#ec4899', '#f43f5e', '#ef4444',
+                '#f97316', '#f59e0b', '#eab308', '#84cc16',
+                '#22c55e', '#10b981', '#14b8a6', '#06b6d4'
+            ],
+            components: {
+                preview: true,
+                opacity: false,
+                hue: true,
+                interaction: {
+                    hex: true,
+                    input: true,
+                    save: true
+                }
+            }
+        });
+
+        pickr.on('save', (color) => {
+            const hex = color.toHEXA().toString();
+            document.getElementById('color-input').value = hex;
+            pickr.hide();
+        });
+
+        pickr.on('change', (color) => {
+            const hex = color.toHEXA().toString();
+            document.getElementById('color-input').value = hex;
+        });
+    </script>
+
+    <style>
+        /* Member Management Specific Styles */
+        .section-header {
+            margin: 48px 0 24px 0;
+        }
+
+        .section-header h3 {
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .color-input {
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 0.875rem;
+            max-width: 120px;
+        }
+
+        #color-picker {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #color-picker:hover {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+
+        .color-preview {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius);
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .color-preview:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-md);
+        }
+
+        .member-name {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .team-badge {
+            
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            letter-spacing: 0.025em;
+        }
+
+        /* Table styling with visible borders - matching manage tasks style */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #ddd;
+            background: white;
+        }
+        
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        .styled-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .styled-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .styled-table tr:hover {
+            background-color: #f1f3f4;
+        }
+
+        /* Color picker styling adjustments */
+        .pcr-app {
+            box-shadow: var(--shadow-lg) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: var(--radius-lg) !important;
+        }
+
+        .pcr-selection .pcr-color-preview {
+            border-radius: var(--radius) !important;
+        }
+
+        /* Empty state for members */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .color-picker-container {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .color-input {
+                max-width: 100%;
+            }
+
+            .section-header {
+                margin: 32px 0 16px 0;
+            }
+        }
+    </style>
+
+
+</body>
+</html>

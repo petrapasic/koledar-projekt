@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Member</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/classic.min.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body>
+
+    <h2>
+        <i data-lucide="user-cog" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 12px; color: var(--primary-color);"></i>
+        Edit Member
+    </h2>
+
+    <div class="nav-buttons">
+        <a href="{{ url_for('manage_members') }}">
+            <i data-lucide="arrow-left" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+            Back to Members
+        </a>
+    </div>
+
+    <div class="form-container">
+        <form method="POST" class="styled-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name" class="form-label">
+                        <i data-lucide="user" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Name
+                    </label>
+                    <input type="text" id="name" name="name" value="{{ member.name }}" required class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="team" class="form-label">
+                        <i data-lucide="flag" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Team
+                    </label>
+                    <input type="text" id="team" name="team" value="{{ member.team }}" class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i data-lucide="palette" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                    Color Theme
+                </label>
+                <div class="color-picker-container">
+                    <div id="color-picker"></div>
+                    <input type="text" name="color" id="color-input" value="{{ member.color or '#6366f1' }}" required class="form-input color-input">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i data-lucide="save" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Save Changes
+                </button>
+                <a href="{{ url_for('manage_members') }}" class="btn-secondary">
+                    <i data-lucide="x" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr"></script>
+    <script>
+        lucide.createIcons();
+
+        const pickr = Pickr.create({
+            el: '#color-picker',
+            theme: 'classic',
+            default: '{{ member.color or "#6366f1" }}',
+            swatches: [
+                '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7',
+                '#d946ef', '#ec4899', '#f43f5e', '#ef4444',
+                '#f97316', '#f59e0b', '#eab308', '#84cc16',
+                '#22c55e', '#10b981', '#14b8a6', '#06b6d4'
+            ],
+            components: {
+                preview: true,
+                opacity: false,
+                hue: true,
+                interaction: {
+                    hex: true,
+                    input: true,
+                    save: true
+                }
+            }
+        });
+
+        pickr.on('save', (color) => {
+            const hex = color.toHEXA().toString();
+            document.getElementById('color-input').value = hex;
+            pickr.hide();
+        });
+
+        pickr.on('change', (color) => {
+            const hex = color.toHEXA().toString();
+            document.getElementById('color-input').value = hex;
+        });
+    </script>
+
+</body>
+</html>

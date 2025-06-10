@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Uredi nalogo</title>
+    <style>
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+            border-color: #c82333;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .inline-form {
+            display: inline;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <h2>Uredi nalogo</h2>
+
+    <div class="top-links">
+        <a href="{{ url_for('calendar_view', view=request.args.get('view', 'daily'), date=request.args.get('date'), team=request.args.get('team'), member=request.args.get('member')) }}" class="btn-secondary">← Nazaj na koledar</a>
+        <a href="{{ url_for('add_task') }}">+ Dodaj nalogo</a>
+        <a href="{{ url_for('manage_members') }}">Upravljanje članov</a>
+        <a href="{{ url_for('manage_tasks') }}">Upravljanje nalog</a>
+        <a href="{{ url_for('logout') }}">Odjava</a>
+    </div>
+
+    <form method="post" class="task-form">
+        <input type="hidden" name="view" value="{{ request.args.get('view', 'daily') }}">
+<input type="hidden" name="team" value="{{ request.args.get('team') }}">
+<input type="hidden" name="member" value="{{ request.args.get('member') }}">
+
+        <div class="form-group">
+            <label for="task-name">Ime naloge</label>
+            <input id="task-name" name="name" value="{{ task.name }}" required class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label for="task-date">Datum</label>
+<input id="task-date" name="date" type="date" value="{{ task.date.strftime('%Y-%m-%d') }}" required class="form-input">
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="start-time">Začetni čas</label>
+                <input id="start-time" name="start" type="time" value="{{ task.start_time }}" required class="form-input">
+            </div>
+            <div class="form-group">
+                <label for="end-time">Končni čas</label>
+                <input id="end-time" name="end" type="time" value="{{ task.end_time }}" required class="form-input">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="member-select">Dodeli članu</label>
+            <select id="member-select" name="member_id" required class="form-input">
+                {% for m in members %}
+                    <option value="{{ m.id }}" {% if m.id == task.member_id %}selected{% endif %}>
+                        {{ m.name }} ({{ m.team }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+    <label for="notes">Opombe</label>
+    <textarea
+        id="notes"
+        name="notes"
+        class="form-input"
+        rows="4"
+        placeholder="Dodatne opombe o nalogi...">{{ task.notes or '' }}</textarea>
+</div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Posodobi nalogo</button>
+<a href="{{ url_for('calendar_view', view=request.args.get('view', 'daily'), date=request.args.get('date'), team=request.args.get('team'), member=request.args.get('member')) }}" class="btn btn-secondary">Prekliči</a>
+            
+        </div>
+    </form>
+    <form method="post"
+      action="{{ url_for('delete_task', task_id=task.id) }}"
+      onsubmit="return confirm('Ali ste prepričani, da želite izbrisati to nalogo?')"
+      class="inline-form"
+      style="margin-top: 16px;">
+      <input type="hidden" name="view" value="{{ request.args.get('view', 'daily') }}">
+<input type="hidden" name="date" value="{{ request.args.get('date') }}">
+<input type="hidden" name="team" value="{{ request.args.get('team') }}">
+<input type="hidden" name="member" value="{{ request.args.get('member') }}">
+
+    <button type="submit" class="btn btn-danger">Izbriši nalogo</button>
+</form>
+</body>
+</html>

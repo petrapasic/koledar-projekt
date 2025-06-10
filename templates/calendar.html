@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Koledarček</title>
+</head>
+<body>
+
+<!-- User info in top right corner -->
+<!-- Top-right controls -->
+<div class="top-right-controls">
+    <div class="user-info">
+        <span class="username">{{ current_user.username }}</span>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Odjava</a>
+    </div>
+    <button class="print-button" onclick="window.print()">🖨️ Natisni</button>
+
+</div>
+
+
+<h2>{{ view_type.title() }} pogled – {{ display_text }}</h2>
+
+<div class="nav-buttons">
+    <a href="{{ url_for('calendar_view', view=view_type, date=prev_date, team=selected_team, member=selected_member) }}">← Prejšnji</a>
+    <a href="{{ url_for('calendar_view', view=view_type, date=next_date, team=selected_team, member=selected_member) }}">Naslednji →</a>
+    <a href="{{ url_for('calendar_view', view='daily', date=current_date.strftime('%Y-%m-%d'), team=selected_team, member=selected_member) }}">Dnevni</a>
+    <a href="{{ url_for('calendar_view', view='weekly', date=current_date.strftime('%Y-%m-%d'), team=selected_team, member=selected_member) }}">Tedenski</a>
+</div>
+
+<div class="top-links">
+    <a href="{{ url_for('add_task') }}">+ Dodaj nalogo</a>
+    <a href="{{ url_for('manage_members') }}">Upravljaj člane</a>
+    <a href="{{ url_for('manage_tasks') }}">Upravljaj naloge</a>
+</div>
+
+<div class="filter-container">
+    <form method="get" action="{{ url_for('calendar_view') }}" class="filter-form">
+        <input type="hidden" name="view" value="{{ view_type }}">
+        <input type="hidden" name="date" value="{{ current_date.strftime('%Y-%m-%d') }}">
+        
+        <div class="filter-section">
+            <label for="team-filter">Filtriraj po ekipi:</label>
+            <select name="team" id="team-filter" onchange="this.form.submit()">
+                <option value="">Vse ekipe</option>
+                {% for team_name in unique_teams %}
+                    <option value="{{ team_name }}" {% if selected_team == team_name %}selected{% endif %}>{{ team_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="filter-section">
+            <label for="member-filter">Filtriraj po članu:</label>
+            <select name="member" id="member-filter" onchange="this.form.submit()">
+                <option value="">Vsi člani</option>
+                {% for member_name in unique_members %}
+                    {% if not selected_team or members_by_team.get(selected_team, [])|selectattr('name', 'equalto', member_name)|list|length > 0 %}
+                        <option value="{{ member_name }}" {% if selected_member == member_name %}selected{% endif %}>{{ member_name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        
+        {% if selected_team or selected_member %}
+        <div class="filter-section">
+            <a href="{{ url_for('calendar_view', view=view_type, date=current_date.strftime('%Y-%m-%d')) }}" class="clear-filters">Počisti filtre</a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+{% if view_type == 'daily' %}
+<div class="header-row" style="grid-template-columns: 80px repeat({{ labels|length }}, 1fr);">
+    <div class="header-cell">Čas</div>
+    {% for label in labels %}
+        <div class="header-cell">{{ label }}</div>
+    {% endfor %}
+</div>
+
+<div class="calendar-wrapper"
+     style="grid-template-columns: 80px repeat({{ labels|length }}, 1fr);">
+    <div class="time-labels">
+        {% for hour in range(5, 24) %}
+            <div class="time-label" style="top: {{ (hour - 5) * 60 }}px;">{{ '%02d:00' % hour }}</div>
+        {% endfor %}
+    </div>
+
+    {% for label in labels %}
+    <div class="member-column drop-zone" data-member-name="{{ label }}"
+         data-date="{{ current_date.strftime('%Y-%m-%d') }}">
+        {% set member_name = label %}
+        {% set tasks = tasks_by_member[member_name]|sort(attribute='start_time') %}
+        {% set task_info = [] %}
+        {% for task in tasks %}
+            {% set start = task.start_time.split(':') %}
+            {% set end = task.end_time.split(':') %}
+            {% set start_min = (start[0]|int) * 60 + (start[1]|int) %}
+            {% set end_min = (end[0]|int) * 60 + (end[1]|int) %}
+            {% set _ = task_info.append({'task': task, 'start_min': start_min, 'end_min': end_min}) %}
+        {% endfor %}
+
+        {% for task_idx in range(task_info|length) %}
+            {% set t = task_info[task_idx] %}
+            {% set overlaps = [] %}
+            {% for j in range(task_info|length) %}
+                {% if task_idx != j %}
+                    {% set other = task_info[j] %}
+                    {% if not (t.end_min <= other.start_min or t.start_min >= other.end_min) %}
+                        {% set _ = overlaps.append(j) %}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            {% set overlap_count = overlaps|length + 1 %}
+            {% set sorted_indexes = overlaps + [task_idx] %}
+            {% set sorted_indexes = sorted_indexes|sort %}
+            {% set slot = sorted_indexes.index(task_idx) %}
+            {% set width_pct = 100 / overlap_count %}
+            {% set left_pct = slot * width_pct %}
+            
+            {% set adjusted_top = t.start_min - 300 %}
+            {% set adjusted_height = t.end_min - t.start_min %}
+          
+<a href="{{ url_for('edit_task', task_id=t.task.id, view=view_type, date=current_date.strftime('%Y-%m-%d'), team=selected_team, member=selected_member) }}"
+   class="task-block"
+   draggable="true"
+   data-task-id="{{ t.task.id }}"
+   data-start-min="{{ t.start_min }}"
+   data-end-min="{{ t.end_min }}"
+   data-duration="{{ t.end_min - t.start_min }}"
+   style="top: {{ adjusted_top }}px;
+          height: {{ adjusted_height }}px;
+          width: {{ width_pct }}%;
+          left: {{ left_pct }}%;
+          background-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};
+          border-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};"
+   tabindex="0">
+    <strong>{{ t.task.name }}</strong><br>
+    <small>{{ t.task.member.name }}</small><br>
+    {{ t.task.start_time }}–{{ t.task.end_time }}
+</a>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if view_type == 'weekly' %}
+{% set monday = current_date - timedelta(days=current_date.weekday()) %}
+<div class="header-row">
+    <div class="header-cell">Čas</div>
+    {% set day_names = ['Pon', 'Tor', 'Sre', 'Čet', 'Pet', 'Sob'] %}
+    {% for i in range(6) %}
+        {% set date = monday + timedelta(days=i) %}
+        <div class="header-cell">{{ day_names[i] }} {{ date.strftime('%d') }}</div>
+    {% endfor %}
+</div>
+
+
+<div class="calendar-wrapper">
+    <div class="time-labels">
+        {% for hour in range(5, 24) %}
+            <div class="time-label" style="top: {{ (hour - 5) * 60 }}px;">{{ '%02d:00' % hour }}</div>
+        {% endfor %}
+    </div>
+
+    {% for day_idx in range(6) %}
+        {% set date = monday + timedelta(days=day_idx) %}
+        <div class="member-column drop-zone" 
+             data-date="{{ date.strftime('%Y-%m-%d') }}">
+            {% set task_info = [] %}
+            {% for task in day_tasks.get(date.date(), []) %}
+                {% set start = task.start_time.split(':') %}
+                {% set end = task.end_time.split(':') %}
+                {% set start_min = (start[0]|int) * 60 + (start[1]|int) %}
+                {% set end_min = (end[0]|int) * 60 + (end[1]|int) %}
+                {% set _ = task_info.append({'task': task, 'start_min': start_min, 'end_min': end_min}) %}
+            {% endfor %}
+
+            {% for task_idx in range(task_info|length) %}
+                {% set t = task_info[task_idx] %}
+                {% set overlaps = [] %}
+                {% for j in range(task_info|length) %}
+                    {% if task_idx != j %}
+                        {% set other = task_info[j] %}
+                        {% if not (t.end_min <= other.start_min or t.start_min >= other.end_min) %}
+                            {% set _ = overlaps.append(j) %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                {% set overlap_count = overlaps|length + 1 %}
+                {% set sorted_indexes = overlaps + [task_idx] %}
+                {% set sorted_indexes = sorted_indexes|sort %}
+                {% set slot = sorted_indexes.index(task_idx) %}
+                {% set width_pct = 100 / overlap_count %}
+                {% set left_pct = slot * width_pct %}
+
+                {% set adjusted_top = t.start_min - 300 %}
+                {% set adjusted_height = t.end_min - t.start_min %}
+
+                <a href="{{ url_for('edit_task', task_id=t.task.id) }}" 
+                   class="task-block"
+                   draggable="true"
+                   data-task-id="{{ t.task.id }}"
+                   data-start-min="{{ t.start_min }}"
+                   data-end-min="{{ t.end_min }}"
+                   data-duration="{{ t.end_min - t.start_min }}"
+                   style="top: {{ adjusted_top }}px;
+                          height: {{ adjusted_height }}px;
+                          width: {{ width_pct }}%;
+                          left: {{ left_pct }}%;
+                          background-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};
+                          border-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};"
+                   tabindex="0">
+                    <strong>{{ t.task.name }}</strong><br>
+                    <small>{{ t.task.member.name }}</small><br>
+                    {{ t.task.start_time }}–{{ t.task.end_time }}
+                </a>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<style>
+/* User info styling */
+.user-info {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    z-index: 1000;
+}
+
+.username {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.9rem;
+}
+
+.logout-btn {
+    background: #e53e3e;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+    background: #c53030;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(229, 62, 62, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .user-info {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 15px;
+        justify-content: center;
+    }
+}
+
+.filter-container {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border: 1px solid #e9ecef;
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.filter-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-section label {
+    font-weight: 500;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.filter-section select {
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: white;
+    min-width: 120px;
+}
+
+.clear-filters {
+    background: #dc3545;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    transition: background-color 0.2s;
+}
+
+.clear-filters:hover {
+    background: #c82333;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .filter-section {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .filter-section select {
+        min-width: 150px;
+    }
+}
+</style>
+
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>

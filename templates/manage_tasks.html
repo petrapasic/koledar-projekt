@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Upravljanje nalog</title>
+    <style>
+        /* Table styling with visible borders */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 2px solid #ddd;
+            background: white;
+        }
+        
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        
+        .styled-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .styled-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .styled-table tr:hover {
+            background-color: #f1f3f4;
+        }
+        
+        /* Actions column styling */
+        .actions {
+            white-space: nowrap;
+        }
+        
+        .actions .btn-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        /* Button styling - make edit and delete look the same but different colors */
+        .btn-action {
+            padding: 6px 12px;
+            border: 1px solid;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+        
+        .btn-edit {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .btn-edit:hover {
+            background: #0056b3;
+            border-color: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+            border-color: #c82333;
+        }
+        
+        .inline-form {
+            display: inline;
+            margin: 0;
+        }
+        
+        /* Ensure table stretches full width */
+        body {
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Vse naloge</h2>
+
+        <div class="nav-buttons">
+            <a href="{{ url_for('add_task') }}">+ Dodaj nalogo</a>
+            <a href="{{ url_for('calendar_view') }}">← Nazaj na koledar</a>
+        </div>
+
+        <form method="get" class="filter-form">
+            <label for="date">Filtriraj po datumu:</label>
+            <input type="date" id="date" name="date" value="{{ selected_date }}" class="form-input">
+            <button type="submit" class="btn-primary">Filtriraj</button>
+            <a href="{{ url_for('manage_tasks') }}" class="btn-secondary">Počisti</a>
+        </form>
+
+        <div class="table-container">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th>Naloga</th>
+                        <th>Datum</th>
+                        <th>Čas</th>
+                        <th>Član</th>
+                        <th>Dejanja</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td class="task-name">{{ task.name }}</td>
+                        <td>{{ task.date }}</td>
+                        <td class="time-range">{{ task.start_time }}–{{ task.end_time }}</td>
+                        <td>{{ task.member.name if task.member else '—' }}</td>
+                        <td class="actions">
+                            <div class="btn-group">
+                                <a href="{{ url_for('edit_task', task_id=task.id) }}" class="btn-action btn-edit">Uredi</a>
+                                <form method="post" action="{{ url_for('delete_task', task_id=task.id) }}" onsubmit="return confirm('Izbriši to nalogo?')" class="inline-form">
+                                    <button type="submit" class="btn-action btn-delete">Izbriši</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not tasks %}
+        <div class="empty-state">
+            <p>Ni najdenih nalog.</p>
+            <a href="{{ url_for('add_task') }}" class="btn-primary">Dodaj svojo prvo nalogo</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

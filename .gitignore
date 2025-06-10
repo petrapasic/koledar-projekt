@@ -1,0 +1,15 @@
+# Python compiled files
+__pycache__/
+*.pyc
+
+# Virtual environments
+venv/
+
+# SQLite database (če ga ne želiš deliti)
+*.db
+
+# Osebne nastavitve
+.env
+
+# Instance folder z lokalnimi podatki
+instance/

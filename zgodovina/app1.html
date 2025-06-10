@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Calendar</title>
+    <style>
+        .calendar-wrapper {
+            display: grid;
+            grid-template-columns: 80px repeat(auto-fit, minmax(150px, 1fr));
+            position: relative;
+            height: 1440px;
+            overflow: hidden;
+        }
+        .member-column {
+            position: relative;
+            border-left: 1px solid var(--gray-200);
+        }
+        .task-block {
+            margin: 0;
+            padding: 4px 6px;
+            font-size: 0.75rem;
+            line-height: 1.2;
+        }
+    </style>
+</head>
+<body>
+<h2>{{ view_type.title() }} View – {{ current_date.strftime('%d. %m. %Y') }}</h2>
+
+<div class="nav-buttons">
+    <a href="{{ url_for('calendar_view', view=view_type, date=prev_date) }}">← Previous</a>
+    <a href="{{ url_for('calendar_view', view=view_type, date=next_date) }}">Next →</a>
+    <a href="{{ url_for('calendar_view', view='daily', date=current_date.strftime('%Y-%m-%d')) }}">Daily</a>
+    <a href="{{ url_for('calendar_view', view='weekly', date=current_date.strftime('%Y-%m-%d')) }}">Weekly</a>
+</div>
+
+<div class="top-links">
+    <a href="{{ url_for('add_task') }}">+ Add Task</a>
+    <a href="{{ url_for('manage_members') }}">Manage Members</a>
+    <a href="{{ url_for('manage_tasks') }}">Manage Tasks</a>
+    <a href="{{ url_for('logout') }}">Logout</a>
+</div>
+
+{% if view_type == 'daily' %}
+<div class="header-row"
+     style="grid-template-columns: 80px repeat({{ labels|length }}, 1fr);">
+    <div class="header-cell">Time</div>
+    {% for label in labels %}
+        <div class="header-cell">{{ label }}</div>
+    {% endfor %}
+</div>
+
+<div class="calendar-wrapper"
+     style="grid-template-columns: 80px repeat({{ labels|length }}, 1fr);">
+    <div class="time-labels">
+        {% for hour in range(5, 24) %}
+    <div class="time-label" style="top: {{ (hour - 5) * 60 }}px;">{{ '%02d:00' % hour }}</div>
+{% endfor %}
+
+    </div>
+
+        {% for label in labels %}
+        <div class="member-column">
+            {% set member_name = label %}
+            {% set tasks = tasks_by_member[member_name]|sort(attribute='start_time') %}
+            {% set task_info = [] %}
+            {% for task in tasks %}
+                {% set start = task.start_time.split(':') %}
+                {% set end = task.end_time.split(':') %}
+                {% set start_min = (start[0]|int) * 60 + (start[1]|int) %}
+                {% set end_min = (end[0]|int) * 60 + (end[1]|int) %}
+                {% set _ = task_info.append({'task': task, 'start_min': start_min, 'end_min': end_min}) %}
+            {% endfor %}
+
+            {% for i in range(task_info|length) %}
+                {% set t = task_info[i] %}
+                {% set overlaps = [] %}
+                {% for j in range(task_info|length) %}
+                    {% if i != j %}
+                        {% set other = task_info[j] %}
+                        {% if not (t.end_min <= other.start_min or t.start_min >= other.end_min) %}
+                            {% set _ = overlaps.append(j) %}
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+                {% set overlap_count = overlaps|length + 1 %}
+                {% set sorted_indexes = overlaps + [i] %}
+                {% set sorted_indexes = sorted_indexes|sort %}
+                {% set slot = sorted_indexes.index(i) %}
+                {% set width_pct = 100 / overlap_count %}
+                {% set left_pct = slot * width_pct %}
+                {% set adjusted_top = [t.start_min - 300, 0]|max %}
+              
+              
+              
+                <div class="task-block"
+     style="top: {{ t.start_min }}px;
+            height: {{ t.end_min - t.start_min }}px;
+            width: {{ width_pct }}%;
+            left: {{ left_pct }}%;
+            background-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};
+            border-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};">
+
+    <strong>{{ t.task.name }}</strong><br>
+    {{ t.task.start_time }}–{{ t.task.end_time }}
+</div>
+
+
+
+
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% if view_type == 'weekly' %}
+    <div class="header-row">
+        <div class="header-cell">Time</div>
+        {% for i in range(7) %}
+            {% set date = current_date + timedelta(days=i) %}
+            <div class="header-cell">{{ date.strftime('%a %d') }}</div>
+        {% endfor %}
+    </div>
+
+    <div class="calendar-wrapper">
+        <div class="time-labels">
+            {% for hour in range(5, 24) %}
+    <div class="time-label" style="top: {{ (hour -5 ) * 60 }}px;">{{ '%02d:00' % hour }}</div>
+{% endfor %}
+
+        </div>
+
+        {% for i in range(7) %}
+            {% set date = current_date + timedelta(days=i) %}
+            <div class="member-column">
+                {% set task_info = [] %}
+                {% for task in day_tasks.get(date.date(), []) %}
+                    {% set start = task.start_time.split(':') %}
+                    {% set end = task.end_time.split(':') %}
+                    {% set start_min = (start[0]|int) * 60 + (start[1]|int) %}
+                    {% set end_min = (end[0]|int) * 60 + (end[1]|int) %}
+                    {% set _ = task_info.append({'task': task, 'start_min': start_min, 'end_min': end_min}) %}
+                {% endfor %}
+
+                {% for i in range(task_info|length) %}
+                    {% set t = task_info[i] %}
+                    {% set overlaps = [] %}
+                    {% for j in range(task_info|length) %}
+                        {% if i != j %}
+                            {% set other = task_info[j] %}
+                            {% if not (t.end_min <= other.start_min or t.start_min >= other.end_min) %}
+                                {% set _ = overlaps.append(j) %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    {% set overlap_count = overlaps|length + 1 %}
+                    {% set sorted_indexes = overlaps + [i] %}
+                    {% set sorted_indexes = sorted_indexes|sort %}
+                    {% set slot = sorted_indexes.index(i) %}
+                    {% set width_pct = 100 / overlap_count %}
+                    {% set left_pct = slot * width_pct %}
+
+
+<div class="task-block"
+     style="top: {{ t.start_min }}px;
+            height: {{ t.end_min - t.start_min }}px;
+            width: {{ width_pct }}%;
+            left: {{ left_pct }}%;
+            background-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};
+            border-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};">
+
+    <strong>{{ t.task.name }}</strong><br>
+    {{ t.task.start_time }}–{{ t.task.end_time }}
+</div>
+
+
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+</body>
+</html>

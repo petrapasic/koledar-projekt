@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Dodaj nalogo - Koledarček</title>
+</head>
+<body>
+
+<h2>Dodaj Nalogo</h2>
+
+<div class="nav-buttons">
+    <a href="{{ url_for('calendar_view') }}">← Nazaj na Koledar</a>
+</div>
+
+<div class="form-container">
+    <form method="post" class="styled-form">
+        <div class="form-group">
+            <label for="name" class="form-label">Ime naloge</label>
+            <input 
+                id="name"
+                name="name" 
+                type="text"
+                class="form-input" 
+                placeholder="Task name" 
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="date" class="form-label">Datum</label>
+            <input 
+                id="date"
+                name="date" 
+                type="date" 
+                class="form-input"
+                required
+            >
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="start" class="form-label">Čas začetka</label>
+                <input 
+                    id="start"
+                    name="start" 
+                    type="time" 
+                    class="form-input"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="end" class="form-label">Čas konca</label>
+                <input 
+                    id="end"
+                    name="end" 
+                    type="time" 
+                    class="form-input"
+                    required
+                >
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="member_id" class="form-label">Dodeli članu</label>
+            <select name="member_id" id="member_id" class="form-select" required>
+                <option value="">Določi člana</option>
+                {% for m in members %}
+                    <option value="{{ m.id }}">{{ m.name }} ({{ m.team }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+    <label for="notes" class="form-label">Opombe</label>
+    <textarea 
+        id="notes"
+        name="notes"
+        class="form-input"
+        rows="4"
+        placeholder="Dodatne opombe o nalogi..."
+    ></textarea>
+</div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">Ustvari nalogo</button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

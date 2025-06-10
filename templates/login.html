@@ -1,0 +1,101 @@
+<!-- LOGIN.HTML -->
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Prijava</title>
+    <style>
+        .compact-form {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-actions {
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        p {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h2>Prijava</h2>
+
+    <!-- Prikaži error sporočilo če login ni uspešen -->
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    <form method="post" class="task-form compact-form">
+        <div class="form-group">
+            <label for="username">Uporabniško ime</label>
+            <input id="username" name="username" placeholder="Username" required class="form-input">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Geslo</label>
+            <input id="password" name="password" type="password" placeholder="Password" required class="form-input">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Prijava</button>
+        </div>
+        
+        <!-- Gumb za nazaj na login page če je login neveljaven -->
+        {% if error %}
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="window.location.reload()">Nazaj na prijavo</button>
+        </div>
+        {% endif %}
+    </form>
+
+    <p><a href="{{ url_for('register') }}">Ustvari nov račun</a></p>
+</body>
+</html>
