@@ -1,4 +1,4 @@
-# Team Task Scheduler
+# Teams Task Scheduler
 
 A simple app for organizing team member tasks in daily and weekly views.
 
