@@ -2,111 +2,229 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <title>Uredi nalogo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>Uredi nalogo</title>
-    <style>
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-            border: 1px solid #dc3545;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.2s ease;
-            font-size: 14px;
-        }
-        
-        .btn-danger:hover {
-            background: #c82333;
-            border-color: #c82333;
-            color: white;
-            text-decoration: none;
-        }
-        
-        .inline-form {
-            display: inline;
-            margin: 0;
-        }
-    </style>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
 </head>
 <body>
-    <h2>Uredi nalogo</h2>
 
-    <div class="top-links">
-        <a href="{{ url_for('calendar_view', view=request.args.get('view', 'daily'), date=request.args.get('date'), team=request.args.get('team'), member=request.args.get('member')) }}" class="btn-secondary">← Nazaj na koledar</a>
-        <a href="{{ url_for('add_task') }}">+ Dodaj nalogo</a>
-        <a href="{{ url_for('manage_members') }}">Upravljanje članov</a>
-        <a href="{{ url_for('manage_tasks') }}">Upravljanje nalog</a>
-        <a href="{{ url_for('logout') }}">Odjava</a>
+    <h2>
+        <i data-lucide="edit-3" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 12px; color: var(--primary-color);"></i>
+        Uredi nalogo
+    </h2>
+
+    <div class="nav-buttons">
+        <a href="{{ url_for('calendar_view', view=request.args.get('view', 'daily'), date=request.args.get('date'), team=request.args.get('team'), member=request.args.get('member')) }}">
+            <i data-lucide="arrow-left" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+            Nazaj na koledar
+        </a>
     </div>
 
-    <form method="post" class="task-form">
+    <div class="form-container">
+        <form method="post" class="styled-form">
+            <input type="hidden" name="view" value="{{ request.args.get('view', 'daily') }}">
+            <input type="hidden" name="team" value="{{ request.args.get('team') }}">
+            <input type="hidden" name="member" value="{{ request.args.get('member') }}">
+            <input type="hidden" name="from_page" value="{{ request.args.get('from_page') }}">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="task-name" class="form-label">
+                        <i data-lucide="clipboard-list" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Ime naloge
+                    </label>
+                    <input type="text" id="task-name" name="name" value="{{ task.name }}" required class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="task-date" class="form-label">
+                        <i data-lucide="calendar" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Datum
+                    </label>
+                    <input type="date" id="task-date" name="date" value="{{ task.date.strftime('%Y-%m-%d') }}" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="start-time" class="form-label">
+                        <i data-lucide="clock" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Začetni čas
+                    </label>
+                    <input type="time" id="start-time" name="start" value="{{ task.start_time }}" required class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="end-time" class="form-label">
+                        <i data-lucide="clock" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                        Končni čas
+                    </label>
+                    <input type="time" id="end-time" name="end" value="{{ task.end_time }}" required class="form-input">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="member-select" class="form-label">
+                    <i data-lucide="user-check" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                    Dodeli članu
+                </label>
+                <select id="member-select" name="member_id" required class="form-input">
+                    {% for m in members %}
+                        <option value="{{ m.id }}" {% if m.id == task.member_id %}selected{% endif %}>
+                            {{ m.name }} ({{ m.team }})
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="notes" class="form-label">
+                    <i data-lucide="file-text" style="width: 14px; height: 14px; margin-right: 6px;"></i>
+                    Opombe
+                </label>
+                <textarea id="notes" name="notes" class="form-input" rows="4" placeholder="Dodatne opombe o nalogi...">{{ task.notes or '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    <i data-lucide="save" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Posodobi nalogo
+                </button>
+                <a href="{{ url_for('calendar_view', view=request.args.get('view', 'daily'), date=request.args.get('date'), team=request.args.get('team'), member=request.args.get('member')) }}" class="btn-secondary">
+                    <i data-lucide="x" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Prekliči
+                </a>
+                <button type="button" class="btn-danger" onclick="showDeleteConfirm()">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Izbriši nalogo
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Hidden delete form -->
+    <form id="delete-form" method="post" action="{{ url_for('delete_task', task_id=task.id) }}" style="display: none;">
+        <input type="hidden" name="from_page" value="{{ request.args.get('from_page') }}">
+        <input type="hidden" name="date" value="{{ request.args.get('date', task.date.strftime('%Y-%m-%d')) }}">
         <input type="hidden" name="view" value="{{ request.args.get('view', 'daily') }}">
-<input type="hidden" name="team" value="{{ request.args.get('team') }}">
-<input type="hidden" name="member" value="{{ request.args.get('member') }}">
-
-        <div class="form-group">
-            <label for="task-name">Ime naloge</label>
-            <input id="task-name" name="name" value="{{ task.name }}" required class="form-input">
-        </div>
-
-        <div class="form-group">
-            <label for="task-date">Datum</label>
-<input id="task-date" name="date" type="date" value="{{ task.date.strftime('%Y-%m-%d') }}" required class="form-input">
-        </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label for="start-time">Začetni čas</label>
-                <input id="start-time" name="start" type="time" value="{{ task.start_time }}" required class="form-input">
-            </div>
-            <div class="form-group">
-                <label for="end-time">Končni čas</label>
-                <input id="end-time" name="end" type="time" value="{{ task.end_time }}" required class="form-input">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label for="member-select">Dodeli članu</label>
-            <select id="member-select" name="member_id" required class="form-input">
-                {% for m in members %}
-                    <option value="{{ m.id }}" {% if m.id == task.member_id %}selected{% endif %}>
-                        {{ m.name }} ({{ m.team }})
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group">
-    <label for="notes">Opombe</label>
-    <textarea
-        id="notes"
-        name="notes"
-        class="form-input"
-        rows="4"
-        placeholder="Dodatne opombe o nalogi...">{{ task.notes or '' }}</textarea>
-</div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Posodobi nalogo</button>
-<a href="{{ url_for('calendar_view', view=request.args.get('view', 'daily'), date=request.args.get('date'), team=request.args.get('team'), member=request.args.get('member')) }}" class="btn btn-secondary">Prekliči</a>
-            
-        </div>
+        <input type="hidden" name="team" value="{{ request.args.get('team') or '' }}">
+        <input type="hidden" name="member" value="{{ request.args.get('member') or '' }}">
     </form>
-    <form method="post"
-      action="{{ url_for('delete_task', task_id=task.id) }}"
-      onsubmit="return confirm('Ali ste prepričani, da želite izbrisati to nalogo?')"
-      class="inline-form"
-      style="margin-top: 16px;">
-      <input type="hidden" name="view" value="{{ request.args.get('view', 'daily') }}">
-<input type="hidden" name="date" value="{{ request.args.get('date') }}">
-<input type="hidden" name="team" value="{{ request.args.get('team') }}">
-<input type="hidden" name="member" value="{{ request.args.get('member') }}">
 
-    <button type="submit" class="btn btn-danger">Izbriši nalogo</button>
-</form>
+    <!-- Delete confirmation modal -->
+    <div id="delete-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i data-lucide="alert-triangle" style="width: 24px; height: 24px; color: var(--danger-color); margin-right: 8px;"></i>
+                <h3>Potrditev brisanja</h3>
+            </div>
+            <div class="modal-body">
+                <p>Ali ste prepričani, da želite izbrisati nalogo "<strong>{{ task.name }}</strong>"?</p>
+                <p style="color: var(--text-muted); font-size: 14px;">To dejanje ni mogoče razveljaviti.</p>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-danger" onclick="confirmDelete()">
+                    <i data-lucide="trash-2" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Da, izbriši
+                </button>
+                <button type="button" class="btn-secondary" onclick="hideDeleteConfirm()">
+                    <i data-lucide="x" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                    Prekliči
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function showDeleteConfirm() {
+            document.getElementById('delete-modal').style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        function hideDeleteConfirm() {
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        function confirmDelete() {
+            document.getElementById('delete-form').submit();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('delete-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideDeleteConfirm();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                hideDeleteConfirm();
+            }
+        });
+    </script>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            margin: 20px;
+        }
+
+        .modal-header {
+            padding: 20px 24px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 16px 24px 24px;
+        }
+
+        .modal-body p {
+            margin: 0 0 12px 0;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            padding: 0 24px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .modal-actions .btn-danger,
+        .modal-actions .btn-secondary {
+            min-width: 120px;
+            justify-content: center;
+        }
+    </style>
+
 </body>
 </html>

@@ -11,7 +11,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db.init_app(app)
 
 from models import User, Member, Task
-from database import db
+
 target_metadata = db.metadata
 
 
@@ -176,10 +176,18 @@ def calendar_view():
     
     view_type = request.args.get('view', 'daily')
     date_str = request.args.get('date')
-    selected_team = request.args.get('team', '')
-    selected_member = request.args.get('member', '')
+    selected_team = request.args.get('team')
+    selected_team = selected_team if selected_team and selected_team.lower() != 'none' else ''
 
-    current_date = datetime.strptime(date_str, '%Y-%m-%d') if date_str else datetime.today()
+    selected_member = request.args.get('member')
+    selected_member = selected_member if selected_member and selected_member.lower() != 'none' else ''
+
+
+    try:
+        current_date = datetime.strptime(request.args.get('date', ''), '%Y-%m-%d')
+    except (ValueError, TypeError):
+        current_date = datetime.today()
+
     
     # Filter members by current user only
     is_admin = current_user and current_user.username == 'admin'
@@ -386,20 +394,25 @@ def add_task():
 def delete_task(task_id):
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     current_user_id = session['user_id']
     task = Task.query.filter_by(id=task_id, user_id=current_user_id).first()
     if task:
         db.session.delete(task)
         db.session.commit()
 
-    # Vzemi parametre iz obrazca
-    view = request.form.get('view', 'daily')
-    date = request.form.get('date')
-    team = request.form.get('team')
-    member = request.form.get('member')
+    # Preverimo, od kod prihajamo
+    from_page = request.form.get('from_page')
 
-    return redirect(url_for('calendar_view', view=view, date=date, team=team, member=member))
+    if from_page == 'manage_tasks':
+        return redirect(url_for('manage_tasks'))
+    else:
+        # Vrni na koledar s potrebnimi parametri (poskrbimo za varne default vrednosti)
+        view = request.form.get('view', 'daily')
+        date = request.form.get('date') or datetime.today().strftime('%Y-%m-%d')
+        team = request.form.get('team') or ''
+        member = request.form.get('member') or ''
+        return redirect(url_for('calendar_view', view=view, date=date, team=team, member=member))
 
 
 @app.route('/edit-task/<int:task_id>', methods=['GET', 'POST'])
@@ -412,6 +425,7 @@ def edit_task(task_id):
     # Only allow editing of user's own tasks
     task = Task.query.filter_by(id=task_id, user_id=current_user_id).first_or_404()
     members = Member.query.filter_by(user_id=current_user_id).all()
+    from_page = request.args.get('from_page')
 
     if request.method == 'POST':
         member_id = request.form['member_id']
@@ -420,6 +434,8 @@ def edit_task(task_id):
         member = Member.query.filter_by(id=member_id, user_id=current_user_id).first()
         if not member:
             return "Invalid member selection", 400
+        
+        
         
         task.name = request.form['name']
         date_str = request.form.get('date')
@@ -437,6 +453,10 @@ def edit_task(task_id):
         task.notes = request.form.get('notes', '')
         
         db.session.commit()
+
+        if request.form.get('from_page') == 'manage_tasks' or from_page == 'manage_tasks':
+            return redirect(url_for('manage_tasks'))
+
         return redirect(url_for(
             'calendar_view',
             view=request.form.get('view', 'daily'),
@@ -549,53 +569,7 @@ def edit_member(member_id):
 
     return render_template('edit_member.html', member=member)
 
-
-def auto_cleanup_old_tasks_all_users():
-    """
-    Run cleanup for all users (can be called from a scheduled job)
-    """
-    if not should_run_cleanup():
-        return {}
-    
-    try:
-        # Get all users
-        users = User.query.all()
-        cleanup_results = {}
-        
-        cutoff_date = datetime.now().date() - timedelta(days=CLEANUP_DAYS_OLD)
-        
-        for user in users:
-            old_tasks = Task.query.filter(
-                Task.date < cutoff_date,
-                Task.user_id == user.id
-            ).all()
-            
-            deleted_count = len(old_tasks)
-            
-            if old_tasks:
-                for task in old_tasks:
-                    db.session.delete(task)
-                
-                cleanup_results[user.id] = {
-                    'username': user.username,
-                    'deleted_count': deleted_count
-                }
-        
-        db.session.commit()
-        record_cleanup_time()
-        
-        if cleanup_results:
-            print(f"[AUTO-CLEANUP] Cleaned up tasks for {len(cleanup_results)} users")
-            for user_id, result in cleanup_results.items():
-                print(f"  User '{result['username']}': {result['deleted_count']} tasks deleted")
-        
-        return cleanup_results
-        
-    except Exception as e:
-        print(f"[AUTO-CLEANUP ERROR] Global cleanup failed: {str(e)}")
-        db.session.rollback()
-        return {}   
-    
+ 
 
 # Cleanup interval in hours
 CLEANUP_INTERVAL_HOURS = 12
@@ -623,3 +597,4 @@ def record_cleanup_time():
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=False)
 
+#    app.run(host="0.0.0.0", port=5000, debug=False)

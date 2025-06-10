@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Edit Member</title>
+    <title>Uredi člana</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
@@ -13,13 +13,13 @@
 
     <h2>
         <i data-lucide="user-cog" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 12px; color: var(--primary-color);"></i>
-        Edit Member
+        Uredi člana
     </h2>
 
     <div class="nav-buttons">
         <a href="{{ url_for('manage_members') }}">
             <i data-lucide="arrow-left" style="width: 16px; height: 16px; margin-right: 6px;"></i>
-            Back to Members
+            Nazaj na člane
         </a>
     </div>
 
@@ -29,7 +29,7 @@
                 <div class="form-group">
                     <label for="name" class="form-label">
                         <i data-lucide="user" style="width: 14px; height: 14px; margin-right: 6px;"></i>
-                        Name
+                        Ime
                     </label>
                     <input type="text" id="name" name="name" value="{{ member.name }}" required class="form-input">
                 </div>
@@ -37,7 +37,7 @@
                 <div class="form-group">
                     <label for="team" class="form-label">
                         <i data-lucide="flag" style="width: 14px; height: 14px; margin-right: 6px;"></i>
-                        Team
+                        Ekipa
                     </label>
                     <input type="text" id="team" name="team" value="{{ member.team }}" class="form-input">
                 </div>
@@ -46,7 +46,7 @@
             <div class="form-group">
                 <label class="form-label">
                     <i data-lucide="palette" style="width: 14px; height: 14px; margin-right: 6px;"></i>
-                    Color Theme
+                    Barvna tema
                 </label>
                 <div class="color-picker-container">
                     <div id="color-picker"></div>
@@ -57,11 +57,11 @@
             <div class="form-actions">
                 <button type="submit" class="btn-primary">
                     <i data-lucide="save" style="width: 16px; height: 16px; margin-right: 6px;"></i>
-                    Save Changes
+                    Shrani spremembe
                 </button>
                 <a href="{{ url_for('manage_members') }}" class="btn-secondary">
                     <i data-lucide="x" style="width: 16px; height: 16px; margin-right: 6px;"></i>
-                    Cancel
+                    Prekliči
                 </a>
             </div>
         </form>

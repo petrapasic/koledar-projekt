@@ -122,24 +122,24 @@
             {% set adjusted_top = t.start_min - 300 %}
             {% set adjusted_height = t.end_min - t.start_min %}
           
-<a href="{{ url_for('edit_task', task_id=t.task.id, view=view_type, date=current_date.strftime('%Y-%m-%d'), team=selected_team, member=selected_member) }}"
-   class="task-block"
-   draggable="true"
-   data-task-id="{{ t.task.id }}"
-   data-start-min="{{ t.start_min }}"
-   data-end-min="{{ t.end_min }}"
-   data-duration="{{ t.end_min - t.start_min }}"
-   style="top: {{ adjusted_top }}px;
-          height: {{ adjusted_height }}px;
-          width: {{ width_pct }}%;
-          left: {{ left_pct }}%;
-          background-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};
-          border-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};"
-   tabindex="0">
-    <strong>{{ t.task.name }}</strong><br>
-    <small>{{ t.task.member.name }}</small><br>
-    {{ t.task.start_time }}–{{ t.task.end_time }}
-</a>
+<a href="{{ url_for('edit_task', task_id=t.task.id, view=view_type, date=current_date.strftime('%Y-%m-%d'), team=selected_team, member=selected_member) }}"> </a>
+               class="task-block"
+               draggable="true"
+               data-task-id="{{ t.task.id }}"
+               data-start-min="{{ t.start_min }}"
+               data-end-min="{{ t.end_min }}"
+               data-duration="{{ t.end_min - t.start_min }}"
+               style="top: {{ adjusted_top }}px;
+                      height: {{ adjusted_height }}px;
+                      width: {{ width_pct }}%;
+                      left: {{ left_pct }}%;
+                      background-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};
+                      border-color: {{ member_colors.get(t.task.member.name, '#6366f1') }};"
+               tabindex="0">
+                <strong>{{ t.task.name }}</strong><br>
+                <small>{{ t.task.member.name }}</small><br>
+                {{ t.task.start_time }}–{{ t.task.end_time }}
+            </a>
         {% endfor %}
     </div>
     {% endfor %}
