@@ -602,6 +602,6 @@ def record_cleanup_time():
 if __name__ == '__main__':
     from models import db
     
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    app.run( debug=True)
 
 #    app.run(host="0.0.0.0", port=5000, debug=False)

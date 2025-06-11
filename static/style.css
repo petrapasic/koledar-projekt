@@ -482,7 +482,7 @@ body > *:last-child {
     justify-content: center;
     gap: 0px; /* CHANGED: Reduced from 1px to 0px for tighter spacing */
     padding: 4px 6px;
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     line-height: 1.0; /* CHANGED: Reduced from 1.1 to 1.0 for tighter spacing */
     overflow: hidden;
     white-space: nowrap;
