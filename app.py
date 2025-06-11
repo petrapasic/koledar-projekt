@@ -4,11 +4,16 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from collections import defaultdict
 from datetime import datetime, timedelta
 from sqlalchemy import and_
+from flask_migrate import Migrate
+from models import db
+
 
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 db.init_app(app)
+
+migrate = Migrate(app, db)
 
 from models import User, Member, Task
 
@@ -595,6 +600,8 @@ def record_cleanup_time():
 
     
 if __name__ == '__main__':
+    from models import db
+    
     app.run(host="0.0.0.0", port=5000, debug=False)
 
 #    app.run(host="0.0.0.0", port=5000, debug=False)
